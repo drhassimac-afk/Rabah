@@ -5,6 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "RabahDj - شبكتك الاجتماعية المحلية",
   description: "تواصل مع أصدقائك وعائلتك عبر شبكتك الاجتماعية المحلية بدون إنترنت",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
