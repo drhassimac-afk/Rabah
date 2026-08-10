@@ -183,6 +183,8 @@ export default function MemoryPage() {
     setBusy(true);
     setError("");
 
+    const roomCode = room.code;
+
     try {
       const response = await fetch("/api/games/memory/rooms", {
         method: "POST",
@@ -191,7 +193,7 @@ export default function MemoryPage() {
         },
         body: JSON.stringify({
           action: "flip",
-          code: room.code,
+          code: roomCode,
           player: myPlayer,
           index,
         }),
@@ -205,8 +207,10 @@ export default function MemoryPage() {
 
       setRoom(data.room);
 
+      // بعد كشف البطاقة الثانية، ننتظر قليلاً
+      // ثم نطلب من السيرفر إخفاء البطاقتين/تثبيت الزوج.
       if (data.room.flippedCards.length === 2) {
-        setTimeout(async () => {
+        window.setTimeout(async () => {
           try {
             const hideResponse = await fetch(
               "/api/games/memory/rooms",
@@ -217,18 +221,26 @@ export default function MemoryPage() {
                 },
                 body: JSON.stringify({
                   action: "hide",
-                  code: room.code,
+                  code: roomCode,
                 }),
               }
             );
 
             const hideData = await hideResponse.json();
 
-            if (hideResponse.ok && hideData.success) {
-              setRoom(hideData.room);
+            if (!hideResponse.ok || !hideData.success) {
+              throw new Error(
+                hideData.error || "تعذر إخفاء البطاقات"
+              );
             }
-          } catch {
-            // polling سيعيد الحالة
+
+            setRoom(hideData.room);
+          } catch (err) {
+            setError(
+              err instanceof Error
+                ? err.message
+                : "تعذر إخفاء البطاقات"
+            );
           } finally {
             setBusy(false);
           }
@@ -237,7 +249,11 @@ export default function MemoryPage() {
         setBusy(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "حدث خطأ");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "حدث خطأ"
+      );
       setBusy(false);
     }
   };
@@ -426,7 +442,7 @@ export default function MemoryPage() {
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-5">
           <button
-            onClick={leaveGame}
+            onClick={() => router.push("/games")}
             className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center"
           >
             <ArrowRight className="w-5 h-5" />
@@ -533,12 +549,7 @@ export default function MemoryPage() {
               <button
                 key={index}
                 onClick={() => flipCard(index)}
-                disabled={
-                  busy ||
-                  !visible &&
-                    (room.status !== "playing" ||
-                      room.currentPlayer !== myPlayer)
-                }
+                disabled={busy || matched}
                 className={`aspect-square rounded-2xl text-4xl sm:text-5xl flex items-center justify-center border transition-all duration-300 ${
                   matched
                     ? "bg-green-500/20 border-green-500/50 scale-95"

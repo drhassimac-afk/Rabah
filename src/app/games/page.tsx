@@ -62,14 +62,18 @@ export default function GamesPage() {
         <header className="h-16 border-b border-slate-800 flex items-center px-4">
           <button
             onClick={() => {
-  if (currentGame?.id === "tic-tac-toe") {
-    router.push("/games/tic-tac-toe");
-    return;
-  }
-  if (currentGame) {
-    setSelectedGame(currentGame?.id ?? null);
-  }
-}}
+              if (currentGame?.id === "tic-tac-toe") {
+                router.push("/games/tic-tac-toe");
+                return;
+              }
+
+              if (currentGame?.id === "memory") {
+                router.push("/games/memory");
+                return;
+              }
+
+              setSelectedGame(currentGame.id);
+            }}
             className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
           >
             <ArrowRight className="w-5 h-5" />
@@ -84,17 +88,11 @@ export default function GamesPage() {
 
         <main className="flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-4rem)]">
           <div className="glass rounded-3xl p-8 text-center max-w-md w-full">
-            <span className="text-6xl mb-4 block">
-              {currentGame.icon}
-            </span>
+            <span className="text-6xl mb-4 block">{currentGame.icon}</span>
 
-            <h2 className="text-2xl font-bold text-white mb-4">
-              قريباً!
-            </h2>
+            <h2 className="text-2xl font-bold text-white mb-4">قريباً!</h2>
 
-            <p className="text-slate-400">
-              اللعبة قيد التطوير
-            </p>
+            <p className="text-slate-400">اللعبة قيد التطوير</p>
 
             <button
               onClick={() => setSelectedGame(null)}
@@ -141,21 +139,21 @@ export default function GamesPage() {
           </div>
         </div>
 
-        <h2 className="text-white font-bold text-lg mb-4">
-          الألعاب المتاحة
-        </h2>
+        <h2 className="text-white font-bold text-lg mb-4">الألعاب المتاحة</h2>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
           {games.map((game) => (
             <button
               key={game.id}
               onClick={() => {
-              if (game.id === "tic-tac-toe") {
-                router.push("/games/tic-tac-toe");
-              } else {
-                setSelectedGame(game.id);
-              }
-            }}
+                if (game.id === "tic-tac-toe") {
+                  router.push("/games/tic-tac-toe");
+                } else if (game.id === "memory") {
+                  router.push("/games/memory");
+                } else {
+                  setSelectedGame(game.id);
+                }
+              }}
               className="glass rounded-2xl p-4 text-center hover:bg-slate-800/50 transition-colors group"
             >
               <div
@@ -164,13 +162,9 @@ export default function GamesPage() {
                 <span className="text-3xl">{game.icon}</span>
               </div>
 
-              <h3 className="text-white font-bold mb-1">
-                {game.name}
-              </h3>
+              <h3 className="text-white font-bold mb-1">{game.name}</h3>
 
-              <p className="text-slate-400 text-xs mb-2">
-                {game.description}
-              </p>
+              <p className="text-slate-400 text-xs mb-2">{game.description}</p>
 
               <div className="flex items-center justify-center gap-3 text-xs text-slate-500">
                 <span className="flex items-center gap-1">
@@ -190,9 +184,7 @@ export default function GamesPage() {
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-5">
             <Trophy className="w-5 h-5 text-yellow-400" />
-            <h2 className="text-white font-bold">
-              المتصدرون
-            </h2>
+            <h2 className="text-white font-bold">المتصدرون</h2>
           </div>
 
           <div className="space-y-3">
@@ -210,12 +202,8 @@ export default function GamesPage() {
                 </div>
 
                 <div className="flex-1">
-                  <p className="text-white font-semibold">
-                    {player.name}
-                  </p>
-                  <p className="text-slate-500 text-xs">
-                    النقاط
-                  </p>
+                  <p className="text-white font-semibold">{player.name}</p>
+                  <p className="text-slate-500 text-xs">النقاط</p>
                 </div>
 
                 <div className="text-yellow-400 font-bold">
