@@ -152,6 +152,8 @@ export default function GamesPage() {
                   router.push("/games/memory");
                 } else if (game.id === "quiz") {
                   router.push("/games/quiz");
+                } else if (game.id === "cards") {
+                  router.push("/games/cards");
                 } else {
                   setSelectedGame(game.id);
                 }
