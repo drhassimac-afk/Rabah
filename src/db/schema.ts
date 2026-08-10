@@ -44,3 +44,20 @@ export type NewUser = typeof users.$inferInsert;
 export type Post = typeof posts.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Stream = typeof streams.$inferSelect;
+
+export const gameRooms = pgTable("game_rooms", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 8 }).notNull().unique(),
+  playerX: varchar("player_x", { length: 100 }),
+  playerO: varchar("player_o", { length: 100 }),
+  board: text("board").notNull().default("[null,null,null,null,null,null,null,null,null]"),
+  currentPlayer: varchar("current_player", { length: 1 }).notNull().default("X"),
+  status: varchar("status", { length: 20 }).notNull().default("waiting"),
+  winner: varchar("winner", { length: 10 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type GameRoom = typeof gameRooms.$inferSelect;
+export type NewGameRoom = typeof gameRooms.$inferInsert;
+
