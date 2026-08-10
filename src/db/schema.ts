@@ -61,3 +61,22 @@ export const gameRooms = pgTable("game_rooms", {
 export type GameRoom = typeof gameRooms.$inferSelect;
 export type NewGameRoom = typeof gameRooms.$inferInsert;
 
+
+export const memoryRooms = pgTable("memory_rooms", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 8 }).notNull().unique(),
+  playerX: varchar("player_x", { length: 100 }),
+  playerO: varchar("player_o", { length: 100 }),
+  board: text("board").notNull(),
+  matchedPairs: text("matched_pairs").notNull().default("[]"),
+  flippedCards: text("flipped_cards").notNull().default("[]"),
+  currentPlayer: varchar("current_player", { length: 1 }).notNull().default("X"),
+  scores: text("scores").notNull().default('{"X":0,"O":0}'),
+  status: varchar("status", { length: 20 }).notNull().default("waiting"),
+  winner: varchar("winner", { length: 10 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type MemoryRoom = typeof memoryRooms.$inferSelect;
+export type NewMemoryRoom = typeof memoryRooms.$inferInsert;
