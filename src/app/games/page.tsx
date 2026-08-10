@@ -150,6 +150,8 @@ export default function GamesPage() {
                   router.push("/games/tic-tac-toe");
                 } else if (game.id === "memory") {
                   router.push("/games/memory");
+                } else if (game.id === "quiz") {
+                  router.push("/games/quiz");
                 } else {
                   setSelectedGame(game.id);
                 }
