@@ -396,17 +396,10 @@ export async function POST(request: NextRequest) {
 
       const room = rooms[0];
 
-      const flippedCards = JSON.parse(room.flippedCards) as number[];
-      const matchedPairs = JSON.parse(room.matchedPairs) as number[];
-
-      const visibleCards = flippedCards.filter((index) =>
-        matchedPairs.includes(index)
-      );
-
       const [updatedRoom] = await db
         .update(memoryRooms)
         .set({
-          flippedCards: JSON.stringify(visibleCards),
+          flippedCards: "[]",
           updatedAt: new Date(),
         })
         .where(eq(memoryRooms.id, room.id))
