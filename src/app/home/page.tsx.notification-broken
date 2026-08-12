@@ -34,8 +34,6 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isOnline, setIsOnline] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("rabahdj_user");
@@ -43,21 +41,7 @@ export default function HomePage() {
       router.push("/join");
       return;
     }
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
-
-    fetch(`/api/notifications?userId=${parsedUser.id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data.notifications)) {
-          setNotifications(data.notifications);
-          setUnreadNotifications(data.unreadCount || 0);
-        }
-      })
-      .catch((error) => {
-        console.error("خطأ في تحميل الإشعارات:", error);
-      });
-
+    setUser(JSON.parse(storedUser));
     fetch("/api/users")
       .then((response) => response.json())
       .then((data) => {
@@ -68,31 +52,36 @@ export default function HomePage() {
       .catch((error) => {
         console.error("خطأ في تحميل المستخدمين:", error);
       });
-    // Load posts from database
-    fetch(`/api/posts?userId=${parsedUser.id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data.posts)) {
-          const formattedPosts = data.posts.map((post: any) => ({
-            ...post,
-            user: {
-              name: post.user?.name || allUsers.find((u: any) => u.id === post.userId)?.name || "مستخدم",
-              avatar: post.user?.avatar || allUsers.find((u: any) => u.id === post.userId)?.avatar || "👤",
-            },
-            time: post.createdAt
-              ? new Date(post.createdAt).toLocaleString("ar-DZ")
-              : "الآن",
-            likes: post.likes || 0,
-            comments: 0,
-            media: post.mediaType || null,
-          }));
-          setPosts(formattedPosts);
-        }
-      })
-      .catch((error) => {
-        console.error("خطأ في تحميل المنشورات:", error);
-      });
-
+    // Load dummy posts
+    setPosts([
+      {
+        id: 1,
+        user: { name: "أحمد", avatar: "👤" },
+        content: "مرحباً بالجميع في شبكتنا المحلية! 🎉",
+        time: "منذ 5 دقائق",
+        likes: 12,
+        comments: 3,
+        media: null,
+      },
+      {
+        id: 2,
+        user: { name: "سارة", avatar: "👩" },
+        content: "شاهدت فيلم رائع في قسم السينما 🎬",
+        time: "منذ 15 دقيقة",
+        likes: 8,
+        comments: 5,
+        media: "video",
+      },
+      {
+        id: 3,
+        user: { name: "محمد", avatar: "👨" },
+        content: "من يحب يلعب ألعاب؟ 🎮",
+        time: "منذ ساعة",
+        likes: 20,
+        comments: 12,
+        media: null,
+      },
+    ]);
   }, [router]);
 
   const features = [
@@ -109,80 +98,20 @@ export default function HomePage() {
     router.push("/");
   };
 
-  const handlePost = async () => {
-    if (!newPost.trim() || !user?.id) return;
-
-    try {
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          content: newPost.trim(),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.post) {
-        console.error("فشل نشر المنشور:", data);
-        return;
-      }
-
-      const post = {
-        ...data.post,
-        user: {
-          name: user.name || "أنت",
-          avatar: user.avatar || "👤",
-        },
-        time: "الآن",
-        likes: data.post.likes || 0,
-        comments: 0,
-        media: null,
-      };
-
-      setPosts((current) => [post, ...current]);
-      setNewPost("");
-    } catch (error) {
-      console.error("خطأ في نشر المنشور:", error);
-    }
+  const handlePost = () => {
+    if (!newPost.trim()) return;
+    const post = {
+      id: Date.now(),
+      user: { name: user?.name || "أنت", avatar: "👤" },
+      content: newPost,
+      time: "الآن",
+      likes: 0,
+      comments: 0,
+      media: null,
+    };
+    setPosts([post, ...posts]);
+    setNewPost("");
   };
-  const handleLike = async (postId: number) => {
-    if (!user?.id) return;
-
-    try {
-      const response = await fetch("/api/posts/like", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          postId,
-          userId: user.id,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        console.error("فشل تحديث الإعجاب:", data);
-        return;
-      }
-
-      setPosts((current) =>
-        current.map((item) =>
-          item.id === postId
-            ? { ...item, likes: data.likes, liked: data.liked }
-            : item
-        )
-      );
-    } catch (error) {
-      console.error("خطأ في الإعجاب:", error);
-    }
-  };
-
     const filteredUsers = allUsers.filter((item) => {
       const query = searchQuery.trim().toLowerCase();
 
@@ -224,67 +153,67 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <button
-                onClick={async () => {
-                  const nextState = !showNotifications;
-                  setShowNotifications(nextState);
+  <button
+    type="button"
+    onClick={() => setShowNotifications((prev) => !prev)}
+    className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors relative"
+    aria-label="الإشعارات"
+  >
+    <Bell className="w-5 h-5" />
 
-                  if (nextState && unreadNotifications > 0 && user?.id) {
-                    try {
-                      await fetch("/api/notifications", {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ userId: user.id }),
-                      });
-                      setUnreadNotifications(0);
-                      setNotifications((current) =>
-                        current.map((item) => ({ ...item, isRead: true }))
-                      );
-                    } catch (error) {
-                      console.error("خطأ في تحديث الإشعارات:", error);
-                    }
-                  }
-                }}
-                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors relative"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                    {unreadNotifications > 99 ? "99+" : unreadNotifications}
-                  </span>
-                )}
-              </button>
+    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
+      3
+    </span>
+  </button>
 
-              {showNotifications && (
-                <div className="absolute left-0 top-12 w-72 glass rounded-2xl border border-slate-700/50 p-4 z-[60]">
-                  <h3 className="text-white font-bold mb-3">الإشعارات</h3>
+  {showNotifications && (
+    <div className="absolute left-0 top-12 w-72 max-w-[85vw] glass rounded-2xl border border-slate-700/50 shadow-2xl p-3 z-[100]">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-white font-bold">الإشعارات</h3>
 
-                  {notifications.length === 0 ? (
-                    <div className="text-slate-400 text-sm text-center py-4">
-                      لا توجد إشعارات
-                    </div>
-                  ) : (
-                    <div className="space-y-3 text-sm max-h-80 overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className="text-slate-300 border-b border-slate-700/50 pb-3 last:border-0"
-                        >
-                          <div className="font-medium text-white">
-                            {notification.title}
-                          </div>
-                          {notification.content && (
-                            <div className="text-slate-400 mt-1">
-                              {notification.content}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+        <button
+          type="button"
+          onClick={() => setShowNotifications(false)}
+          className="text-slate-400 hover:text-white text-sm"
+        >
+          إغلاق
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <button
+          type="button"
+          className="w-full text-right p-3 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 transition-colors"
+          onClick={() => setShowNotifications(false)}
+        >
+          <p className="text-white text-sm">👤 أحمد أرسل لك رسالة</p>
+          <p className="text-slate-500 text-xs mt-1">منذ دقائق</p>
+        </button>
+
+        <button
+          type="button"
+          className="w-full text-right p-3 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 transition-colors"
+          onClick={() => setShowNotifications(false)}
+        >
+          <p className="text-white text-sm">🎮 محمد يدعوك للعب</p>
+          <p className="text-slate-500 text-xs mt-1">منذ 10 دقائق</p>
+        </button>
+
+        <button
+          type="button"
+          className="w-full text-right p-3 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 transition-colors"
+          onClick={() => setShowNotifications(false)}
+        >
+          <p className="text-white text-sm">🎬 محتوى جديد متاح</p>
+          <p className="text-slate-500 text-xs mt-1">منذ ساعة</p>
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">3</span>
+            </button>
             <button 
               onClick={handleLogout}
               className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-400 transition-colors"
@@ -372,18 +301,9 @@ export default function HomePage() {
                     )}
 
                     <div className="flex gap-6 pt-3 border-t border-slate-700/50">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className={`flex items-center gap-2 transition-colors ${
-                          post.liked
-                            ? "text-red-500"
-                            : "text-slate-400 hover:text-red-400"
-                        }`}
-                      >
-                        <Heart
-                          className={`w-5 h-5 ${post.liked ? "fill-current" : ""}`}
-                        />
-                        <span className="text-sm">{post.likes ?? 0}</span>
+                      <button className="flex items-center gap-2 text-slate-400 hover:text-red-400">
+                        <Heart className="w-5 h-5" />
+                        <span className="text-sm">{post.likes}</span>
                       </button>
                       <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400">
                         <MessageSquare className="w-5 h-5" />

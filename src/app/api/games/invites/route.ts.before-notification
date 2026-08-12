@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { gameInvites, notifications } from "@/db/schema";
+import { gameInvites } from "@/db/schema";
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,14 +101,6 @@ export async function POST(request: NextRequest) {
       status: "pending",
     })
     .returning();
-
-  await db.insert(notifications).values({
-    userId: receiverId,
-    type: "game_invite",
-    title: "دعوة للعب 🎮",
-    content: `لديك دعوة للعب ${game}`,
-    relatedUserId: senderId,
-  });
 
   return NextResponse.json({
     success: true,
