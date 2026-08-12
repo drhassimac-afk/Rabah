@@ -27,7 +27,7 @@ import {
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("feed");
+  const [activeTab, setActiveTab] = useState("home");
   const [posts, setPosts] = useState<any[]>([]);
   const [isOnline, setIsOnline] = useState(true);
   const [newPost, setNewPost] = useState("");
@@ -144,104 +144,169 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        {/* Features Grid */}
-        <div className="grid grid-cols-5 gap-2 mb-8">
-          {features.map((feature) => (
-            <button
-              key={feature.id}
-              onClick={() => router.push(`/${feature.id}`)}
-              className={`${feature.bg} rounded-2xl p-3 flex flex-col items-center gap-2 hover:scale-105 transition-transform`}
-            >
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
-                <feature.icon className="w-5 h-5 text-white" />
+        <main className="max-w-2xl mx-auto px-4 py-6">
+          {activeTab === "home" && (
+            <>
+              <div className="grid grid-cols-5 gap-2 mb-8">
+                {features.map((feature) => (
+                  <button
+                    key={feature.id}
+                    onClick={() => router.push(`/${feature.id}`)}
+                    className={`${feature.bg} rounded-2xl p-3 flex flex-col items-center gap-2 hover:scale-105 transition-transform`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
+                      <feature.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white text-xs font-medium">{feature.label}</span>
+                  </button>
+                ))}
               </div>
-              <span className="text-white text-xs font-medium">{feature.label}</span>
-            </button>
-          ))}
-        </div>
 
-        {/* Create Post */}
-        <div className="glass rounded-2xl p-4 mb-6">
-          <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-              {user.name?.[0] || "👤"}
+              <div className="glass rounded-2xl p-4 mb-6">
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {user.name?.[0] || "👤"}
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      value={newPost}
+                      onChange={(e) => setNewPost(e.target.value)}
+                      placeholder="ماذا يدور في ذهنك؟"
+                      className="w-full bg-slate-800/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                      rows={2}
+                    />
+                    <div className="flex justify-between items-center mt-3">
+                      <div className="flex gap-2">
+                        <button className="p-2 rounded-lg bg-slate-800 text-blue-400 hover:bg-slate-700">
+                          <Film className="w-5 h-5" />
+                        </button>
+                        <button className="p-2 rounded-lg bg-slate-800 text-green-400 hover:bg-slate-700">
+                          <Mic className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <button
+                        onClick={handlePost}
+                        disabled={!newPost.trim()}
+                        className="btn-primary px-6 py-2 rounded-full text-white font-medium text-sm disabled:opacity-50"
+                      >
+                        نشر
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <div key={post.id} className="glass rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xl">
+                          {post.user.avatar}
+                        </div>
+                        <div>
+                          <h3 className="text-white font-medium">{post.user.name}</h3>
+                          <p className="text-slate-500 text-xs">{post.time}</p>
+                        </div>
+                      </div>
+                      <MoreHorizontal className="w-5 h-5 text-slate-500" />
+                    </div>
+
+                    <p className="text-white mb-3 leading-relaxed">{post.content}</p>
+
+                    {post.media === "video" && (
+                      <div className="relative bg-slate-800 rounded-xl aspect-video flex items-center justify-center mb-3">
+                        <Play className="w-16 h-16 text-white/50" />
+                      </div>
+                    )}
+
+                    <div className="flex gap-6 pt-3 border-t border-slate-700/50">
+                      <button className="flex items-center gap-2 text-slate-400 hover:text-red-400">
+                        <Heart className="w-5 h-5" />
+                        <span className="text-sm">{post.likes}</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400">
+                        <MessageSquare className="w-5 h-5" />
+                        <span className="text-sm">{post.comments}</span>
+                      </button>
+                      <button className="text-slate-400 hover:text-green-400">
+                        <Share2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === "users" && (
+            <div className="glass rounded-2xl p-6">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">👥 المستخدمون</h2>
+              <div className="space-y-3">
+                {[
+                  ["أحمد", "👨", "متصل الآن"],
+                  ["سارة", "👩", "متصلة الآن"],
+                  ["محمد", "👨‍💼", "متصل"],
+                  ["فاطمة", "👩‍🎓", "متصلة"],
+                  ["خالد", "👨‍🔧", "غير متصل"],
+                ].map(([name, avatar, status]) => (
+                  <div key={name} className="flex items-center gap-3 bg-slate-800/50 rounded-xl p-3">
+                    <span className="text-2xl">{avatar}</span>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">{name}</p>
+                      <p className="text-xs text-slate-500">{status}</p>
+                    </div>
+                    <button
+                      onClick={() => router.push("/chat")}
+                      className="px-3 py-2 rounded-lg bg-blue-500/20 text-blue-400"
+                    >
+                      محادثة
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex-1">
-              <textarea
-                value={newPost}
-                onChange={(e) => setNewPost(e.target.value)}
-                placeholder="ماذا يدور في ذهنك؟"
-                className="w-full bg-slate-800/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                rows={2}
+          )}
+
+          {activeTab === "search" && (
+            <div className="glass rounded-2xl p-6">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">🔍 بحث</h2>
+              <input
+                type="search"
+                placeholder="ابحث في RabahDj..."
+                className="w-full bg-slate-800/70 rounded-xl px-4 py-4 text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <div className="flex justify-between items-center mt-3">
-                <div className="flex gap-2">
-                  <button className="p-2 rounded-lg bg-slate-800 text-blue-400 hover:bg-slate-700 transition-colors">
-                    <Film className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 rounded-lg bg-slate-800 text-green-400 hover:bg-slate-700 transition-colors">
-                    <Mic className="w-5 h-5" />
-                  </button>
-                </div>
-                <button
-                  onClick={handlePost}
-                  disabled={!newPost.trim()}
-                  className="btn-primary px-6 py-2 rounded-full text-white font-medium text-sm disabled:opacity-50"
-                >
-                  نشر
-                </button>
-              </div>
+              <p className="text-slate-500 text-center text-sm mt-6">
+                ابحث عن المستخدمين والمنشورات والمحتوى
+              </p>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Feed */}
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <div key={post.id} className="glass rounded-2xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xl">
-                    {post.user.avatar}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-medium">{post.user.name}</h3>
-                    <p className="text-slate-500 text-xs">{post.time}</p>
-                  </div>
+          {activeTab === "settings" && (
+            <div className="glass rounded-2xl p-6">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">⚙️ الإعدادات</h2>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-slate-800/50 rounded-xl p-4">
+                  <span className="text-white">الحالة</span>
+                  <span className="text-green-400">متصل</span>
                 </div>
-                <button className="text-slate-500 hover:text-white">
-                  <MoreHorizontal className="w-5 h-5" />
+
+                <div className="flex items-center justify-between bg-slate-800/50 rounded-xl p-4">
+                  <span className="text-white">اسم المستخدم</span>
+                  <span className="text-slate-400">{user.name}</span>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full mt-4 py-3 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                >
+                  تسجيل الخروج
                 </button>
               </div>
-              
-              <p className="text-white mb-3 leading-relaxed">{post.content}</p>
-              
-              {post.media === "video" && (
-                <div className="relative bg-slate-800 rounded-xl aspect-video flex items-center justify-center mb-3">
-                  <Play className="w-16 h-16 text-white/50" />
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
-                <div className="flex gap-6">
-                  <button className="flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors">
-                    <Heart className="w-5 h-5" />
-                    <span className="text-sm">{post.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors">
-                    <MessageSquare className="w-5 h-5" />
-                    <span className="text-sm">{post.comments}</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-slate-400 hover:text-green-400 transition-colors">
-                    <Share2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
             </div>
-          ))}
-        </div>
-      </main>
+          )}
+        </main>
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 glass border-t border-slate-700/50 z-50">
