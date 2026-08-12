@@ -29,8 +29,10 @@ export default function HomePage() {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [posts, setPosts] = useState<any[]>([]);
-  const [isOnline, setIsOnline] = useState(true);
   const [newPost, setNewPost] = useState("");
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("rabahdj_user");
@@ -39,7 +41,16 @@ export default function HomePage() {
       return;
     }
     setUser(JSON.parse(storedUser));
-    
+    fetch("/api/users")
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data.users)) {
+          setAllUsers(data.users);
+        }
+      })
+      .catch((error) => {
+        console.error("خطأ في تحميل المستخدمين:", error);
+      });
     // Load dummy posts
     setPosts([
       {
@@ -100,6 +111,16 @@ export default function HomePage() {
     setPosts([post, ...posts]);
     setNewPost("");
   };
+    const filteredUsers = allUsers.filter((item) => {
+      const query = searchQuery.trim().toLowerCase();
+
+      if (!query) return true;
+
+      return (
+        item.name?.toLowerCase().includes(query) ||
+        item.username?.toLowerCase().includes(query)
+      );
+    });
 
   if (!user) return null;
 
