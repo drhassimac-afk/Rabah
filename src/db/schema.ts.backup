@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  serial,
-  varchar,
-  timestamp,
-  text,
-  integer,
-  boolean,
-} from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, timestamp, text, integer, boolean } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -20,9 +12,7 @@ export const users = pgTable("users", {
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   mediaUrl: text("media_url"),
   mediaType: varchar("media_type", { length: 20 }),
@@ -32,12 +22,8 @@ export const posts = pgTable("posts", {
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  senderId: integer("sender_id")
-    .notNull()
-    .references(() => users.id),
-  receiverId: integer("receiver_id")
-    .notNull()
-    .references(() => users.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  receiverId: integer("receiver_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -45,9 +31,7 @@ export const messages = pgTable("messages", {
 
 export const streams = pgTable("streams", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   title: varchar("title", { length: 200 }).notNull(),
   isLive: boolean("is_live").default(true),
   streamUrl: text("stream_url"),
@@ -66,12 +50,8 @@ export const gameRooms = pgTable("game_rooms", {
   code: varchar("code", { length: 8 }).notNull().unique(),
   playerX: varchar("player_x", { length: 100 }),
   playerO: varchar("player_o", { length: 100 }),
-  board: text("board")
-    .notNull()
-    .default("[null,null,null,null,null,null,null,null,null]"),
-  currentPlayer: varchar("current_player", { length: 1 })
-    .notNull()
-    .default("X"),
+  board: text("board").notNull().default("[null,null,null,null,null,null,null,null,null]"),
+  currentPlayer: varchar("current_player", { length: 1 }).notNull().default("X"),
   status: varchar("status", { length: 20 }).notNull().default("waiting"),
   winner: varchar("winner", { length: 10 }),
   createdAt: timestamp("created_at").defaultNow(),
@@ -81,6 +61,7 @@ export const gameRooms = pgTable("game_rooms", {
 export type GameRoom = typeof gameRooms.$inferSelect;
 export type NewGameRoom = typeof gameRooms.$inferInsert;
 
+
 export const memoryRooms = pgTable("memory_rooms", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 8 }).notNull().unique(),
@@ -89,9 +70,7 @@ export const memoryRooms = pgTable("memory_rooms", {
   board: text("board").notNull(),
   matchedPairs: text("matched_pairs").notNull().default("[]"),
   flippedCards: text("flipped_cards").notNull().default("[]"),
-  currentPlayer: varchar("current_player", { length: 1 })
-    .notNull()
-    .default("X"),
+  currentPlayer: varchar("current_player", { length: 1 }).notNull().default("X"),
   scores: text("scores").notNull().default('{"X":0,"O":0}'),
   status: varchar("status", { length: 20 }).notNull().default("waiting"),
   winner: varchar("winner", { length: 10 }),
@@ -119,46 +98,3 @@ export const quizRooms = pgTable("quiz_rooms", {
 
 export type QuizRoom = typeof quizRooms.$inferSelect;
 export type NewQuizRoom = typeof quizRooms.$inferInsert;
-export const cardsRooms = pgTable("cards_rooms", {
-  id: serial("id").primaryKey(),
-  code: varchar("code", { length: 8 }).notNull().unique(),
-
-  playerX: varchar("player_x", { length: 100 }),
-  playerO: varchar("player_o", { length: 100 }),
-
-  drawnCardsX: text("drawn_cards_x").notNull().default("[]"),
-  drawnCardsO: text("drawn_cards_o").notNull().default("[]"),
-
-  scores: text("scores").notNull().default('{"X":0,"O":0}'),
-
-  currentPlayer: varchar("current_player", { length: 1 })
-    .notNull()
-    .default("X"),
-
-  status: varchar("status", { length: 20 }).notNull().default("waiting"),
-
-  winner: varchar("winner", { length: 10 }),
-
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export type CardsRoom = typeof cardsRooms.$inferSelect;
-export type NewCardsRoom = typeof cardsRooms.$inferInsert;
-export const gameInvites = pgTable("game_invites", {
-  id: serial("id").primaryKey(),
-  senderId: integer("sender_id")
-    .notNull()
-    .references(() => users.id),
-  receiverId: integer("receiver_id")
-    .notNull()
-    .references(() => users.id),
-  game: varchar("game", { length: 30 }).notNull(),
-  roomCode: varchar("room_code", { length: 8 }).notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export type GameInvite = typeof gameInvites.$inferSelect;
-export type NewGameInvite = typeof gameInvites.$inferInsert;

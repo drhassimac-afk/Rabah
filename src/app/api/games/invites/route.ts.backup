@@ -1,0 +1,136 @@
+import { NextRequest, NextResponse } from "next/server";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/db";
+import { gameInvites } from "@/db/schema";
+
+export async function GET(request: NextRequest) {
+  try {
+    const userId = Number(request.nextUrl.searchParams.get("userId"));
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return NextResponse.json(
+        { error: "معرف المستخدم غير صحيح" },
+        { status: 400 },
+      );
+    }
+
+    const invites = await db
+      .select()
+      .from(gameInvites)
+      .where(
+        and(
+          eq(gameInvites.receiverId, userId),
+          eq(gameInvites.status, "pending"),
+        ),
+      );
+
+    return NextResponse.json({
+      success: true,
+      invites,
+    });
+  } catch (error) {
+    console.error("GET game invites error:", error);
+
+    return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    const action = String(body.action || "");
+
+    if (action === "create") {
+      const senderId = Number(body.senderId);
+      const receiverId = Number(body.receiverId);
+      const game = String(body.game || "").trim();
+      const roomCode = String(body.roomCode || "")
+        .trim()
+        .toUpperCase();
+
+      if (
+        !Number.isInteger(senderId) ||
+        senderId <= 0 ||
+        !Number.isInteger(receiverId) ||
+        receiverId <= 0 ||
+        !game ||
+        !roomCode
+      ) {
+        return NextResponse.json(
+          { error: "بيانات الدعوة غير صحيحة" },
+          { status: 400 },
+        );
+      }
+
+      const [invite] = await db
+        .insert(gameInvites)
+        .values({
+          senderId,
+          receiverId,
+          game,
+          roomCode,
+          status: "pending",
+        })
+        .returning();
+
+      return NextResponse.json({
+        success: true,
+        invite,
+      });
+    }
+
+    if (action === "accept" || action === "reject") {
+      const inviteId = Number(body.inviteId);
+      const receiverId = Number(body.receiverId);
+
+      if (!Number.isInteger(inviteId) || !Number.isInteger(receiverId)) {
+        return NextResponse.json(
+          { error: "بيانات الدعوة غير صحيحة" },
+          { status: 400 },
+        );
+      }
+
+      const [invite] = await db
+        .select()
+        .from(gameInvites)
+        .where(
+          and(
+            eq(gameInvites.id, inviteId),
+            eq(gameInvites.receiverId, receiverId),
+            eq(gameInvites.status, "pending"),
+          ),
+        )
+        .limit(1);
+
+      if (!invite) {
+        return NextResponse.json(
+          { error: "الدعوة غير موجودة أو تمت معالجتها" },
+          { status: 404 },
+        );
+      }
+
+      const newStatus = action === "accept" ? "accepted" : "rejected";
+
+      const [updatedInvite] = await db
+        .update(gameInvites)
+        .set({
+          status: newStatus,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameInvites.id, inviteId))
+        .returning();
+
+      return NextResponse.json({
+        success: true,
+        invite: updatedInvite,
+      });
+    }
+
+    return NextResponse.json({ error: "الإجراء غير معروف" }, { status: 400 });
+  } catch (error) {
+    console.error("POST game invites error:", error);
+
+    return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 });
+  }
+}

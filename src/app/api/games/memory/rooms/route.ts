@@ -396,6 +396,15 @@ export async function POST(request: NextRequest) {
 
       const room = rooms[0];
 
+      const flippedCards = JSON.parse(room.flippedCards) as number[];
+
+      if (flippedCards.length !== 2) {
+        return NextResponse.json({
+          success: true,
+          room: emptyRoom(room),
+        });
+      }
+
       const [updatedRoom] = await db
         .update(memoryRooms)
         .set({
@@ -404,6 +413,11 @@ export async function POST(request: NextRequest) {
         })
         .where(eq(memoryRooms.id, room.id))
         .returning();
+
+      return NextResponse.json({
+        success: true,
+        room: emptyRoom(updatedRoom),
+      });
 
       return NextResponse.json({
         success: true,

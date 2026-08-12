@@ -199,38 +199,19 @@ export default function CardsPage() {
   }, [createRoom, loadInvites, loadUsers, router]);
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  let stopped = false;
-  let roomTimer: ReturnType<typeof setTimeout> | null = null;
+    const interval = setInterval(() => {
+      loadInvites(user.id);
+      loadUsers();
 
-  const updateRoom = async () => {
-    if (stopped) return;
+      if (room?.code) {
+        loadRoom(room.code);
+      }
+    }, 3000);
 
-    if (room?.code) {
-      await loadRoom(room.code);
-    }
-
-    if (!stopped) {
-      roomTimer = setTimeout(updateRoom, 3000);
-    }
-  };
-
-  const invitesInterval = setInterval(() => {
-    loadInvites(user.id);
-  }, 5000);
-
-  updateRoom();
-
-  return () => {
-    stopped = true;
-    clearInterval(invitesInterval);
-
-    if (roomTimer) {
-      clearTimeout(roomTimer);
-    }
-  };
-}, [loadInvites, loadRoom, room?.code, user]);
+    return () => clearInterval(interval);
+  }, [loadInvites, loadRoom, loadUsers, room?.code, user]);
 
   const sendInvite = async (receiverId: number) => {
     if (!user || !room) return;
@@ -260,11 +241,7 @@ export default function CardsPage() {
         throw new Error(data.error || "تعذر إرسال الدعوة");
       }
 
-      setMessage(
-    data.alreadyExists
-      ? "الدعوة موجودة بالفعل 🎮"
-      : "تم إرسال الدعوة بنجاح 🎮",
-  );
+      setMessage("تم إرسال الدعوة بنجاح 🎮");
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر إرسال الدعوة");
     } finally {
