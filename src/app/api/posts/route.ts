@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { posts, users } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { posts, users, postLikes, postComments } from "@/db/schema";
+import { desc, eq, count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,17 +23,20 @@ export async function GET(request: NextRequest) {
           username: users.username,
           avatar: users.avatar,
         },
+        comments: count(postComments.id),
       })
       .from(posts)
       .leftJoin(users, eq(posts.userId, users.id))
+      .leftJoin(postComments, eq(postComments.postId, posts.id))
+      .groupBy(
+        posts.id,
+        users.id
+      )
       .orderBy(desc(posts.createdAt));
 
     let likedPostIds = new Set<number>();
 
     if (Number.isInteger(currentUserId) && currentUserId > 0) {
-      const { postLikes } = await import("@/db/schema");
-      const { and } = await import("drizzle-orm");
-
       const likes = await db
         .select({ postId: postLikes.postId })
         .from(postLikes)
@@ -44,12 +47,14 @@ export async function GET(request: NextRequest) {
 
     const formattedPosts = allPosts.map((post) => ({
       ...post,
+      comments: Number(post.comments),
       liked: likedPostIds.has(post.id),
     }));
 
     return NextResponse.json({ posts: formattedPosts });
   } catch (error) {
     console.error("Get posts error:", error);
+
     return NextResponse.json(
       { error: "حدث خطأ في الخادم" },
       { status: 500 }
@@ -85,6 +90,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Create post error:", error);
+
     return NextResponse.json(
       { error: "حدث خطأ في الخادم" },
       { status: 500 }

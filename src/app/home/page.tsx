@@ -124,7 +124,7 @@ export default function HomePage() {
                 : "الآن",
               likes: post.likes || 0,
               liked: post.liked || false,
-              comments: commentList.length,
+              comments: Number(post.comments) || 0,
               media: post.mediaType || null,
             };
           })
